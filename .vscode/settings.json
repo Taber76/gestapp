@@ -1,5 +1,6 @@
 {
   "conventionalCommits.scopes": [
-    "base-server"
+    "base-server",
+    "User"
   ]
 }

@@ -19,23 +19,42 @@ class UserModel {
         const connection = mogodb_1.default.getInstance().getConnection();
         this.model = connection.model('User', user_schema_1.UserSchema);
     }
-    getAllUsers() {
+    login(email, username) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const users = yield this.model.find();
-                return users;
+                let user = null;
+                if (username) {
+                    user = yield this.model.findOne({ username }).select('+password');
+                }
+                else if (email) {
+                    user = yield this.model.findOne({ email }).select('+password');
+                }
+                return user;
+            }
+            catch (error) {
+                console.error(error);
+                return null;
+            }
+        });
+    }
+    register(userData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const newUser = new this.model(userData);
+                const savedUser = yield newUser.save();
+                return savedUser;
             }
             catch (error) {
                 throw error;
             }
         });
     }
-    addUser(userData) {
+    update(id, userData) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const newUser = new this.model(userData);
-                const savedUser = yield newUser.save();
-                return savedUser;
+                userData.updated_at = new Date();
+                const updatedUser = yield this.model.findByIdAndUpdate(id, userData, { new: true, runValidators: true });
+                return updatedUser;
             }
             catch (error) {
                 throw error;

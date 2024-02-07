@@ -3,23 +3,29 @@ import MongoDB from '../config/mogodb';
 import { IUser, UserSchema } from '../schemas/user.schema';
 
 class UserModel {
-  public model: Model<IUser>;
+  private model: Model<IUser>;
 
   public constructor() {
     const connection = MongoDB.getInstance().getConnection();
     this.model = connection.model<IUser>('User', UserSchema);
   }
 
-  public async getAllUsers(): Promise<IUser[]> {
+  public async login(email: string, username: string): Promise<IUser | null> {
     try {
-      const users = await this.model.find();
-      return users;
+      let user = null;
+      if (username) {
+        user = await this.model.findOne({ username }).select('+password');
+      } else if (email) {
+        user = await this.model.findOne({ email }).select('+password');
+      }
+      return user;
     } catch (error) {
-      throw error;
+      console.error(error);
+      return null;
     }
   }
 
-  public async addUser(userData: IUser): Promise<IUser> {
+  public async register(userData: IUser): Promise<IUser> {
     try {
       const newUser = new this.model(userData);
       const savedUser = await newUser.save();
@@ -28,8 +34,17 @@ class UserModel {
       throw error;
     }
   }
+
+  public async update(id: string, userData: IUser): Promise<IUser | null> {
+    try {
+      userData.updated_at = new Date();
+      const updatedUser = await this.model.findByIdAndUpdate(id, userData, { new: true, runValidators: true });
+      return updatedUser;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 export default new UserModel();
-
-
